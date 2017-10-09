@@ -1,5 +1,8 @@
 # sensor_networks
-to be used with the course Sensor Networks in TUC
+rep to be used with the course Sensor Networks in TUC
+The project will implement the TAG and LEACH protocols in a pseudo network with minor changes to test errors, node deaths, and epoch time for a query message completion.
 
-test 1
-branch : read-me-edits
+team: Papadopoulos Ioannis
+      Politof Kostas
+      
+last updated 9/10/2017
