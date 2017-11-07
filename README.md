@@ -6,4 +6,4 @@ The project will implement the TAG and LEACH protocols in a pseudo network with 
 team: Papadopoulos Ioannis
       Politof Kostas
       
-last updated 9/10/2017
+last updated 7/Nov/2017
