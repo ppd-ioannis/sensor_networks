@@ -8,7 +8,7 @@ module SRTreeC
 	uses interface Boot;
 	uses interface SplitControl as RadioControl;
 #ifdef SERIAL_EN
-	uses interface SplitControl as SerialControl;
+	uses interface SplitControl as SerialControl; 
 #endif
 
 	uses interface AMSend as RoutingAMSend;
@@ -24,14 +24,16 @@ module SRTreeC
 	uses interface AMPacket as SerialAMPacket;
 	uses interface Packet as SerialPacket;
 #endif
-	uses interface Leds;
-	uses interface Timer<TMilli> as RoutingMsgTimer;
-	uses interface Timer<TMilli> as Led0Timer;
-	uses interface Timer<TMilli> as Led1Timer;
-	uses interface Timer<TMilli> as Led2Timer;
-	uses interface Timer<TMilli> as LostTaskTimer;
+	//uses interface Leds;
+
+	uses interface Timer<TMilli> as RoutingMsgTimer;  // θα τρέξει μια φορά
+
+	//uses interface Timer<TMilli> as Led0Timer; 
+	//uses interface Timer<TMilli> as Led1Timer;
+	//uses interface Timer<TMilli> as Led2Timer;
+	//uses interface Timer<TMilli> as LostTaskTimer;
 	
-	uses interface Receive as RoutingReceive;
+	uses interface Receive as RoutingReceive; // ??? Τα κάνει το TAG
 	uses interface Receive as NotifyReceive;
 	uses interface Receive as SerialReceive;
 	
@@ -43,7 +45,7 @@ module SRTreeC
 }
 implementation
 {
-	uint16_t  roundCounter;
+	uint16_t  roundCounter;  // μπορούμε και να το βγάλουμε
 	
 	message_t radioRoutingSendPkt;
 	message_t radioNotifySendPkt;
@@ -58,21 +60,22 @@ implementation
 #ifdef SERIAL_EN
 	bool serialBusy=FALSE;
 #endif
-	
+	/* εκτός 
 	bool lostRoutingSendTask=FALSE;
 	bool lostNotifySendTask=FALSE;
 	bool lostRoutingRecTask=FALSE;
-	bool lostNotifyRecTask=FALSE;
+	bool lostNotifyRecTask=FALSE;*/
 	
 	uint8_t curdepth;
 	uint16_t parentID;
 	
+       // Άρα έχουμε 4 task
 	task void sendRoutingTask();
 	task void sendNotifyTask();
 	task void receiveRoutingTask();
 	task void receiveNotifyTask();
 	
-	void setLostRoutingSendTask(bool state)
+	/*void setLostRoutingSendTask(bool state)
 	{
 		atomic{
 			lostRoutingSendTask=state;
@@ -115,13 +118,14 @@ implementation
 		atomic{
 		lostRoutingRecTask=state;
 		}
-	}
+	}*/
+
 	void setRoutingSendBusy(bool state)
 	{
 		atomic{
 		RoutingSendBusy=state;
 		}
-		if(state==TRUE)
+		/*if(state==TRUE)
 		{
 			call Leds.led0On();
 			call Led0Timer.startOneShot(TIMER_LEDS_MILLI);
@@ -129,7 +133,7 @@ implementation
 		else 
 		{
 			//call Leds.led0Off();
-		}
+		}*/
 	}
 	
 	void setNotifySendBusy(bool state)
@@ -141,7 +145,7 @@ implementation
 #ifdef PRINTFDBG_MODE
 		printf("\t\t\t\t\t\tNotifySendBusy = %s\n", (state == TRUE)?"TRUE":"FALSE");
 #endif
-		
+		/*
 		if(state==TRUE)
 		{
 			call Leds.led1On();
@@ -150,26 +154,27 @@ implementation
 		else 
 		{
 			//call Leds.led1Off();
-		}
+		}*/
 	}
 #ifdef SERIAL_EN
 	void setSerialBusy(bool state)
 	{
 		serialBusy=state;
-		if(state==TRUE)
+		/*if(state==TRUE)
 		{
-			call Leds.led2On();
+			//call Leds.led2On();
 			call Led2Timer.startOneShot(TIMER_LEDS_MILLI);
 		}
 		else
 		{
 			//call Leds.led2Off();
-		}
+		}*/
 	}
 #endif
 	event void Boot.booted()
 	{
 		/////// arxikopoiisi radio kai serial
+                // έχουμε πάντα το ράδιο ανοιχτώ
 		call RadioControl.start();
 		
 		setRoutingSendBusy(FALSE);
@@ -177,9 +182,9 @@ implementation
 #ifdef SERIAL_EN
 		setSerialBusy(FALSE);
 #endif
-		roundCounter =0;
+		roundCounter = 0;
 		
-		if(TOS_NODE_ID==0)
+		if(TOS_NODE_ID == 0)
 		{
 #ifdef SERIAL_EN
 			call SerialControl.start();
@@ -272,8 +277,9 @@ implementation
 		printfflush();
 #endif
 	}
-	
-	event void LostTaskTimer.fired()     // Ξανατρέχει τα Tasks
+
+  /*	//Δεν μπάινει ποτέ
+        event void LostTaskTimer.fired()     // Ξανατρέχει τα Tasks
 	{
 		if (lostRoutingSendTask)
 		{
@@ -298,7 +304,7 @@ implementation
 			post receiveNotifyTask();
 			setLostNotifyRecTask(FALSE);
 		}
-	}
+	}  */
 	
 	event void RoutingMsgTimer.fired()
 	{
@@ -312,16 +318,21 @@ implementation
 		printf("RoutingMsgTimer fired!  radioBusy = %s \n",(RoutingSendBusy)?"True":"False");
 		printfflush();
 #endif
-		if (TOS_NODE_ID==0)
-		{
-			roundCounter+=1;  //?????????????????????????????????????????????
+
+              dbg("SRTreeC", "\n\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa   id = %d\n",TOS_NODE_ID);
+
+              /*
+		if (TOS_NODE_ID==0)    // Πρέπει να είναι εκτός δεν ξαναστέλνουμε Routing msg και πλεον το roundCounter μετράει πόσες εποχές θα τρέξει
+		{ 
+			roundCounter+=1;  //
 			
 			dbg("SRTreeC", "\n ##################################### \n");
 			dbg("SRTreeC", "#######   ROUND   %u    ############## \n", roundCounter);
 			dbg("SRTreeC", "#####################################\n");
 			
-			call RoutingMsgTimer.startOneShot(TIMER_PERIOD_MILLI);
-		}
+                       //The <code>fired</code> will be signaled when the timer expires.
+		       call RoutingMsgTimer.startOneShot(TIMER_PERIOD_MILLI); //εκτοσ
+		}*/
 		
 		if(call RoutingSendQueue.full())
 		{
@@ -346,7 +357,7 @@ implementation
 		}
 
 		atomic{
-		mrpkt->senderID = TOS_NODE_ID; // ???????????????
+		mrpkt->senderID = TOS_NODE_ID;
 		mrpkt->depth = curdepth;
 		}
 
@@ -389,7 +400,7 @@ implementation
 		}		
 	}
 	
-	event void Led0Timer.fired()
+	/*event void Led0Timer.fired()
 	{
 		call Leds.led0Off();
 	}
@@ -400,9 +411,10 @@ implementation
 	event void Led2Timer.fired()
 	{
 		call Leds.led2Off();
-	}
+	}*/
 	
-	event void RoutingAMSend.sendDone(message_t * msg , error_t err)
+
+	event void RoutingAMSend.sendDone(message_t * msg , error_t err) // Signaled in response to an accepted send request.
 	{   // Πέτυχα ή Απέτυχα να στείλω το μνμ => Πέτυχα ή Απέτυχα να λάβει ο πραλήπτης το μνμ
 
 		dbg("SRTreeC", "A Routing package sent... %s \n",(err==SUCCESS)?"True":"False");
@@ -418,7 +430,7 @@ implementation
 #endif
 		setRoutingSendBusy(FALSE); // Σταματάω να προσπαθώ να στείλω μνμ
 		
-		if(!(call RoutingSendQueue.empty())) // Αν η ουρά δεν είναι άδεια
+		if(!(call RoutingSendQueue.empty())) // Αν η ουρά δεν είναι άδεια 
 		{
 			post sendRoutingTask(); //Προσπάθω να στείλω τα μνμ τις ουράς ένα ένα
 		}
@@ -620,15 +632,16 @@ implementation
 		 
                 // Μέχρι εδώ έχω ένα μνμ στην ουρά να στείλω 
 		
-		if(RoutingSendBusy) // TRUE => Δεν μπορώ να στείλω νέο μνμ γιατί ήδη  
-                                    // προσπαθώ να στείλω το προηγούμενο
+		if(RoutingSendBusy) // TRUE => Δεν μπορώ να στείλω νέο μνμ γιατί ήδη προσπαθώ να στείλω το προηγούμενο 
+                                    // Όταν RoutingAMSend.send => RoutingAMSend.sendDone => Τότε θα έχει τελειώσει προσπάθεια να στείλω το προηγούμενο (επιτ ή αποτυχ) =>
+                                    // => το RoutingSendBusy θα γίνει false
 		{
 			dbg("SRTreeC","sendRoutingTask(): RoutingSendBusy= TRUE!!!\n");
 #ifdef PRINTFDBG_MODE
 			printf(	"sendRoutingTask(): RoutingSendBusy= TRUE!!!\n");
 			printfflush();
 #endif
-			setLostRoutingSendTask(TRUE); // Περιμένω την LostTaskTimer.fired()
+			//setLostRoutingSendTask(TRUE); // Περιμένω την LostTaskTimer.fired()
 			return;
 		}
 		
@@ -716,7 +729,7 @@ implementation
 			printf(	"sendTask(): NotifySendBusy= TRUE!!!\n");
 			printfflush();
 #endif
-			setLostNotifySendTask(TRUE);
+			//setLostNotifySendTask(TRUE);
 			return;
 		}
 		
@@ -802,8 +815,8 @@ implementation
 			NotifyParentMsg* m;
 			RoutingMsg * mpkt = (RoutingMsg*) (call RoutingPacket.getPayload(&radioRoutingRecPkt,len));
 			
-			//if(TOS_NODE_ID >0)
-			//{
+			//if(TOS_NODE_ID >0)  (adel)
+			//{  
 				//call RoutingMsgTimer.startOneShot(TIMER_PERIOD_MILLI);
 			//}
 			//
@@ -817,7 +830,7 @@ implementation
 			if ( (parentID<0)||(parentID>=65535)) //Δεν έχω ακόμα πατέρα 
 			{
 				// tote den exei akoma patera
-				parentID= call RoutingAMPacket.source(&radioRoutingRecPkt);//mpkt->senderID; // Αυτός που έστειλε έιναι ο πατέρας μου ???? (θα θέλει αλλαγή?)
+				parentID= call RoutingAMPacket.source(&radioRoutingRecPkt);//mpkt->senderID; // Αυτός που έστειλε έιναι ο πατέρας μου
 				curdepth= mpkt->depth + 1;
 #ifdef PRINTFDBG_MODE
 				printf("NodeID= %d : curdepth= %d , parentID= %d \n", TOS_NODE_ID ,curdepth , parentID);
@@ -852,7 +865,7 @@ implementation
 
 				if (TOS_NODE_ID!=0)
 				{
-					call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD); // SOS ??? μάλλον για αρχικοποίηση
+					call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD); // για να ξανατρέξει ένα καιούργιο round
 				}
 			}
 			else //Έχω πατέρα 
@@ -903,9 +916,9 @@ implementation
 						}
 					}
 
-					if (TOS_NODE_ID!=0)
+					if (TOS_NODE_ID!=0)  // δεν τρεχει προς το παρον  ?????
 					{
-						call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD); //??? αρχικοποίηση ???
+						call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD); 
 					}
 
 					// tha stelnei kai ena minima NotifyParentMsg   (adel)
@@ -951,7 +964,7 @@ implementation
 			printf("receiveRoutingTask():Empty message!!! \n");
 			printfflush();
 #endif
-			setLostRoutingRecTask(TRUE);
+			//setLostRoutingRecTask(TRUE);
 			return;
 		}
 		
@@ -1069,7 +1082,7 @@ implementation
 			printf("receiveNotifyTask():Empty message!!! \n");
 			printfflush();
 #endif
-			setLostNotifyRecTask(TRUE);
+			//setLostNotifyRecTask(TRUE);
 			return;
 		}
 		
