@@ -7,9 +7,10 @@ module SRTreeC
 {
 	uses interface Boot;
 	uses interface SplitControl as RadioControl;
+/*
 #ifdef SERIAL_EN
 	uses interface SplitControl as SerialControl; 
-#endif
+#endif*/
 
 	uses interface AMSend as RoutingAMSend;
 	uses interface AMPacket as RoutingAMPacket;
@@ -19,11 +20,12 @@ module SRTreeC
 	uses interface AMPacket as NotifyAMPacket;
 	uses interface Packet as NotifyPacket;
 
+/*
 #ifdef SERIAL_EN
 	uses interface AMSend as SerialAMSend;
 	uses interface AMPacket as SerialAMPacket;
 	uses interface Packet as SerialPacket;
-#endif
+#endif*/
 	//uses interface Leds;
 
 	uses interface Timer<TMilli> as RoutingMsgTimer;  // θα τρέξει μια φορά
@@ -33,9 +35,9 @@ module SRTreeC
 	//uses interface Timer<TMilli> as Led2Timer;
 	//uses interface Timer<TMilli> as LostTaskTimer;
 	
-	uses interface Receive as RoutingReceive; // ??? Τα κάνει το TAG
+	uses interface Receive as RoutingReceive; 
 	uses interface Receive as NotifyReceive;
-	uses interface Receive as SerialReceive;
+	//uses interface Receive as SerialReceive;
 	
 	uses interface PacketQueue as RoutingSendQueue;
 	uses interface PacketQueue as RoutingReceiveQueue;
@@ -51,15 +53,15 @@ implementation
 	message_t radioNotifySendPkt;
 	
 	
-	message_t serialPkt;
-	//message_t serialRecPkt;
+	//message_t serialPkt;
+	////message_t serialRecPkt;
 	
 	bool RoutingSendBusy=FALSE;
 	bool NotifySendBusy=FALSE;
-
+/*
 #ifdef SERIAL_EN
 	bool serialBusy=FALSE;
-#endif
+#endif*/
 	/* εκτός 
 	bool lostRoutingSendTask=FALSE;
 	bool lostNotifySendTask=FALSE;
@@ -156,11 +158,12 @@ implementation
 			//call Leds.led1Off();
 		}*/
 	}
+/*
 #ifdef SERIAL_EN
 	void setSerialBusy(bool state)
 	{
 		serialBusy=state;
-		/*if(state==TRUE)
+		//if(state==TRUE)
 		{
 			//call Leds.led2On();
 			call Led2Timer.startOneShot(TIMER_LEDS_MILLI);
@@ -168,9 +171,10 @@ implementation
 		else
 		{
 			//call Leds.led2Off();
-		}*/
+		}
 	}
-#endif
+#endif 
+*/ 
 	event void Boot.booted()
 	{
 		/////// arxikopoiisi radio kai serial
@@ -179,16 +183,20 @@ implementation
 		
 		setRoutingSendBusy(FALSE);
 		setNotifySendBusy(FALSE);
+/*
 #ifdef SERIAL_EN
 		setSerialBusy(FALSE);
 #endif
+*/
 		roundCounter = 0;
 		
 		if(TOS_NODE_ID == 0)
 		{
+/*
 #ifdef SERIAL_EN
 			call SerialControl.start();
 #endif
+*/
 			curdepth=0;
 			parentID=0;
 			dbg("Boot", "curdepth = %d  ,  parentID= %d \n", curdepth , parentID);
@@ -246,7 +254,7 @@ implementation
 		printfflush();
 #endif
 	}
-
+/*
 	event void SerialControl.startDone(error_t err)
 	{
 		if (err == SUCCESS)
@@ -277,6 +285,7 @@ implementation
 		printfflush();
 #endif
 	}
+*/
 
   /*	//Δεν μπάινει ποτέ
         event void LostTaskTimer.fired()     // Ξανατρέχει τα Tasks
@@ -430,7 +439,7 @@ implementation
 #endif
 		setRoutingSendBusy(FALSE); // Σταματάω να προσπαθώ να στείλω μνμ
 		
-		if(!(call RoutingSendQueue.empty())) // Αν η ουρά δεν είναι άδεια 
+		if(!(call RoutingSendQueue.empty())) // Αν η ουρά δεν είναι άδεια     // Μαλον είναι εκτοσ (???)
 		{
 			post sendRoutingTask(); //Προσπάθω να στείλω τα μνμ τις ουράς ένα ένα
 		}
@@ -461,7 +470,7 @@ implementation
 		
 		
 	}
-	
+/*	
 	event void SerialAMSend.sendDone(message_t* msg , error_t err)
 	{
 		if ( &serialPkt == msg)
@@ -476,7 +485,7 @@ implementation
 			//call Leds.led2Off();
 		}
 	}
-	
+	*/
 	
 	event message_t* NotifyReceive.receive( message_t* msg , void* payload , uint8_t len)
 	{
@@ -593,7 +602,7 @@ implementation
 		dbg("SRTreeC", "### RoutingReceive.receive() end ##### \n");
 		return msg;
 	}
-	
+/*	
 	event message_t* SerialReceive.receive(message_t* msg , void* payload , uint8_t len)
 	{
 		// when receiving from serial port
@@ -603,7 +612,7 @@ implementation
 		printfflush();
 #endif
 		return msg;
-	}
+	}*/
 	
 	////////////// Tasks implementations //////////////////////////////
 	
@@ -632,7 +641,7 @@ implementation
 		 
                 // Μέχρι εδώ έχω ένα μνμ στην ουρά να στείλω 
 		
-		if(RoutingSendBusy) // TRUE => Δεν μπορώ να στείλω νέο μνμ γιατί ήδη προσπαθώ να στείλω το προηγούμενο 
+		if(RoutingSendBusy) // (???) // TRUE => Δεν μπορώ να στείλω νέο μνμ γιατί ήδη προσπαθώ να στείλω το προηγούμενο 
                                     // Όταν RoutingAMSend.send => RoutingAMSend.sendDone => Τότε θα έχει τελειώσει προσπάθεια να στείλω το προηγούμενο (επιτ ή αποτυχ) =>
                                     // => το RoutingSendBusy θα γίνει false
 		{
@@ -789,7 +798,7 @@ implementation
 	
 	task void receiveRoutingTask()
 	{
-		message_t tmp;
+		//message_t tmp;
 		uint8_t len;
 		message_t radioRoutingRecPkt;
 		
@@ -808,11 +817,11 @@ implementation
 #endif
 		// processing of radioRecPkt
 		
-		// pos tha xexorizo ta 2 diaforetika minimata??? (από adel)
+		// pos tha xexorizo ta 2 diaforetika minimata (από adel)
 				
 		if(len == sizeof(RoutingMsg))  // Έχω λάβει κάποιο μνμ
 		{
-			NotifyParentMsg* m;
+			//NotifyParentMsg* m;
 			RoutingMsg * mpkt = (RoutingMsg*) (call RoutingPacket.getPayload(&radioRoutingRecPkt,len));
 			
 			//if(TOS_NODE_ID >0)  (adel)
@@ -836,7 +845,7 @@ implementation
 				printf("NodeID= %d : curdepth= %d , parentID= %d \n", TOS_NODE_ID ,curdepth , parentID);
 				printfflush();
 #endif
-				// tha stelnei kai ena minima NotifyParentMsg ston patera
+				/*// tha stelnei kai ena minima NotifyParentMsg ston patera
 				
 				m = (NotifyParentMsg *) (call NotifyPacket.getPayload(&tmp, sizeof(NotifyParentMsg)));
 				m->senderID=TOS_NODE_ID;
@@ -861,14 +870,14 @@ implementation
 					{
 						post sendNotifyTask();
 					}
-				}
+				}*/
 
 				if (TOS_NODE_ID!=0)
 				{
 					call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD); // για να ξανατρέξει ένα καιούργιο round
 				}
 			}
-			else //Έχω πατέρα 
+			/*else //Έχω πατέρα 
 			{
 				
 				if (( curdepth > mpkt->depth +1) || (mpkt->senderID==parentID)) // Αλλάζω πατέρα
@@ -916,7 +925,7 @@ implementation
 						}
 					}
 
-					if (TOS_NODE_ID!=0)  // δεν τρεχει προς το παρον  ?????
+					if (TOS_NODE_ID!=0)  // δεν τρεχει προς το παρον  ???
 					{
 						call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD); 
 					}
@@ -926,7 +935,7 @@ implementation
 					
 					if (oldparentID!=parentID) // Έχω νέο πατέρα
 					{
-                                               // στέλνω ένα NotifyParentMsg στον νέο πατέρα και       στον παλιό (???)
+                                               // στέλνω ένα NotifyParentMsg στον νέο πατέρα και       στον παλιό ???
 						m = (NotifyParentMsg *) (call NotifyPacket.getPayload(&tmp, sizeof(NotifyParentMsg)));
 						m->senderID=TOS_NODE_ID;
 						m->depth = curdepth;
@@ -955,7 +964,7 @@ implementation
 				}
 				
 				
-			}
+			}*/
 		}
 		else
 		{
@@ -1022,10 +1031,11 @@ implementation
 				
 			}
 
-			if ( TOS_NODE_ID==0) // ΑΝ είναι η ρίζα
+			if ( TOS_NODE_ID==0)//SOOOOOOOOOOOOOOOOOOOOOOOOS  (???) // ΑΝ είναι η ρίζα
 			{
+/*
 #ifdef SERIAL_EN
-				if (!serialBusy) //???
+				if (!serialBusy) //  (???)
 				{
                                         // mipos mporei na mpei san task?
 					NotifyParentMsg * m = (NotifyParentMsg *) (call SerialPacket.getPayload(&serialPkt, sizeof(NotifyParentMsg)));
@@ -1043,6 +1053,7 @@ implementation
 					}
 				}
 #endif
+*/
 			}
 			else
 			{

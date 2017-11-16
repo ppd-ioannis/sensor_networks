@@ -11,7 +11,7 @@ implementation{
 #ifdef PRINTFDBG_MODE
 		components PrintfC;
 #endif
-	components MainC, ActiveMessageC, SerialActiveMessageC; // LedsC,
+	components MainC, ActiveMessageC;//, LedsC,SerialActiveMessageC;
 	components new TimerMilliC() as RoutingMsgTimerC;
 	//components new TimerMilliC() as Led0TimerC;
 	//components new TimerMilliC() as Led1TimerC;
@@ -22,10 +22,10 @@ implementation{
 	components new AMReceiverC(AM_ROUTINGMSG) as RoutingReceiverC;
 	components new AMSenderC(AM_NOTIFYPARENTMSG) as NotifySenderC;
 	components new AMReceiverC(AM_NOTIFYPARENTMSG) as NotifyReceiverC;
-#ifdef SERIAL_EN
+/*#ifdef SERIAL_EN
 	components new SerialAMSenderC(AM_NOTIFYPARENTMSG);
 	components new SerialAMReceiverC(AM_NOTIFYPARENTMSG);
-#endif
+#endif*/
 	components new PacketQueueC(SENDER_QUEUE_SIZE) as RoutingSendQueueC;
 	components new PacketQueueC(RECEIVER_QUEUE_SIZE) as RoutingReceiveQueueC;
 	components new PacketQueueC(SENDER_QUEUE_SIZE) as NotifySendQueueC;
@@ -51,14 +51,16 @@ implementation{
 	SRTreeC.NotifyAMPacket->NotifySenderC.AMPacket;
 	SRTreeC.NotifyAMSend->NotifySenderC.AMSend;
 	SRTreeC.NotifyReceive->NotifyReceiverC.Receive;
-	
+
+/*	
 #ifdef SERIAL_EN	
 	SRTreeC.SerialReceive->SerialAMReceiverC.Receive;
 	SRTreeC.SerialAMSend->SerialAMSenderC.AMSend;
 	SRTreeC.SerialAMPacket->SerialAMSenderC.AMPacket;
 	SRTreeC.SerialPacket->SerialAMSenderC.Packet;
 	SRTreeC.SerialControl->SerialActiveMessageC;
-#endif
+#endif*/
+
 	SRTreeC.RoutingSendQueue->RoutingSendQueueC;
 	SRTreeC.RoutingReceiveQueue->RoutingReceiveQueueC;
 	SRTreeC.NotifySendQueue->NotifySendQueueC;
