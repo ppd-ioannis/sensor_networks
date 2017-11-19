@@ -35,8 +35,9 @@ typedef nx_struct NotifyParentMsg
 {
 	nx_uint16_t senderID;
 	nx_uint16_t parentID;
-        nx_uint16_t value1;
-        nx_uint16_t value2;
+        nx_uint16_t Count;
+        nx_uint16_t Sum;
+        nx_uint16_t SumOfSquares;
 	nx_uint8_t depth; 
 
 } NotifyParentMsg;
