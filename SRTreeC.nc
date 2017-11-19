@@ -166,8 +166,8 @@ implementation
             atomic{    
                 tmpVal = TOS_NODE_ID + (tmpVal % 20);
                 
-                mrpkt->Sum   = 10; // tmpVal;
-                mrpkt->SumOfSquares = 10*10; // tmpVal*tmpVAl;
+                mrpkt->Sum   =  10; //tmpVal; //
+                mrpkt->SumOfSquares = 10*10; // tmpVal*tmpVal;
                 mrpkt->Count = 1;
 
                for(i=0; i < Max_children ; i++)
@@ -184,7 +184,7 @@ implementation
                     }
                }       
 		        mrpkt->senderID = TOS_NODE_ID;
-                mrpkt->parentID = parentID; // κάτω .set
+                mrpkt->parentID = parentID; // κάτω .set ?????
             }
          
            if( TOS_NODE_ID == 0 )
@@ -196,14 +196,14 @@ implementation
                 dbg("SRTreeC", " Sum  =  %d\n", mrpkt->Sum);
                 dbg("SRTreeC", " SumOfSquares  =  %d\n",mrpkt->SumOfSquares);
                 dbg("SRTreeC", " The AVG  =  %f\n",(double) mrpkt->Sum/mrpkt->Count);
-                dbg("SRTreeC", " The VAR  =  %f\n",(double) mrpkt->SumOfSquares/mrpkt->Count);
+                dbg("SRTreeC", " The VAR  =  %f\n",(double) mrpkt->SumOfSquares/mrpkt->Count - (mrpkt->Sum/mrpkt->Count)*     (mrpkt->Sum/mrpkt->Count));
            }
            else
-           {
+           { 
                 call NotifyAMPacket.setDestination(&tmp,parentID);
                 call NotifyPacket.setPayloadLength(&tmp,sizeof(NotifyParentMsg));
                 enqueueDone = call NotifySendQueue.enqueue(tmp);
-                  
+
                 if( enqueueDone==SUCCESS)
 		        {
 			       if (call NotifySendQueue.size() == 1 )
@@ -481,11 +481,7 @@ implementation
 		if(len == sizeof(NotifyParentMsg))  // Έχω λάβει κάποιο μνμ
 		{
 			NotifyParentMsg* mr = (NotifyParentMsg*) (call NotifyPacket.getPayload(&radioNotifyRecPkt,len));
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                  // Υπολογίζω
-
-               // Επεξεργασία αποθηκεύω τα δεδομ που μου έχουν στείλει 
+           // Επεξεργασία αποθηκεύω τα δεδομ που μου έχουν στείλει 
             
                         //    (adel)
 			// an to parentID == TOS_NODE_ID tote   // (**)
@@ -498,18 +494,18 @@ implementation
 		       if ( mr->parentID == TOS_NODE_ID) // (**) Αν το μύνητα που έλαβε έχει ως πατέρα τον ίδιο τον κόμβο 
 	           {                                 // Τότε βάζει τον κόμβο που το έστειλε ως παιδί του   
 
-               		//	dbg("SRTreeC"," 1111111111111111111111111111 id = %d\n",TOS_NODE_ID);
                  atomic
                  {
                   for(i=0; i < Max_children ; i++)
-                  {
+                  {    
                         if(Childern_id[i] == mr->senderID ) // Ανανεώνω τις τιμές του παιδιού στην λίστα
                         {
                               Childern_CountnNum[i] = mr->Count; 
                               Childern_val[i] = mr->Sum;
                               Childern_valofSquares[i] = mr->SumOfSquares;
-                        }  
-                        else  if(Childern_id[i] == 65535)  // προσθέτουμε το παιδί στην λίστα
+                              break;
+                        }            
+                        else if(Childern_id[i] == 65535)  // προσθέτουμε το παιδί στην λίστα
                         {
                               Childern_id[i] = mr->senderID;
                               Childern_CountnNum[i] = mr->Count; 
@@ -524,8 +520,7 @@ implementation
 	           {
 			              // apla diagrafei ton komvo apo paidi tou.. 
 	           } */
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////			
+			
 		}
 		else
 		{
