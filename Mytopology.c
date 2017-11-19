@@ -78,14 +78,14 @@ int Range_Between_two_nodes(int l1,int c1,int l2,int c2,float r)
    FILE *fp;
    for(int id=0; id< D*D ; id++)	//for D^2 nodes
    {                         
-       fp = fopen(filename, "a");
-       if(fp==NULL){
-       		printf("Error opening file. Exiting");
+       fp = fopen(filename, "a+");
+       if(fp==0){
+       		printf("Error opening file. Exiting\n");
        		break;	
        	}
-       if(id!=0)
-       fprintf(fp,"\n");
-       
+       if(id!=0){
+       		fprintf(fp,"\n");
+       }
       	line   = id/D;
 	column = id%D;
 	
@@ -115,8 +115,8 @@ int Range_Between_two_nodes(int l1,int c1,int l2,int c2,float r)
          	{  
          		//printf("\n====PAIR====\n");
          		
-            		fprintf(fp," %d %d \n",id,k);
-            		fprintf(fp," %d %d \n",k,id);
+            		fprintf(fp,"%d %d -50.0\n",id,k);
+            		fprintf(fp,"%d %d -50.0\n",k,id);
 	    		is_connected = 0;				
 	 	}
 		   
