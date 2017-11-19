@@ -13,7 +13,6 @@ implementation{
 #endif
 	components MainC, ActiveMessageC , RandomC;
 	components new TimerMilliC() as RoutingMsgTimerC;
-        //components new TimerMilliC() as NodeValTimerC;
         components new TimerMilliC() as EndRoutingTimerC;
         components new TimerMilliC() as NotifyTimerC;
 
@@ -36,7 +35,6 @@ implementation{
 	
 	SRTreeC.RoutingMsgTimer->RoutingMsgTimerC;
         SRTreeC.EndRoutingTimer->EndRoutingTimerC;
-        //SRTreeC.NodeValTimer -> NodeValTimerC;
         SRTreeC.NotifyTimer -> NotifyTimerC;
 	
 	SRTreeC.RoutingPacket->RoutingSenderC.Packet;

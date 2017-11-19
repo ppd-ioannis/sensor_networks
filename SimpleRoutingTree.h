@@ -13,13 +13,10 @@ enum{
 	TIMER_PERIOD_MILLI=150000, // RoutingMsgTimer SerialControl
 	TIMER_FAST_PERIOD=200,     // RoutingMsgTimer  (msec) 
 
-        TIMER_EPOCH  = 60000, //ektos
+        TIMER_EPOCH  = 60000,
         Max_children = 30,
         Max_depth  = 10,      
-        
-        //TIMER_NodeVal = 60000, // ektos
-
-
+   
 };
 
 /*uint16_t AM_ROUTINGMSG = AM_SIMPLEROUTINGTREEMSG;
@@ -29,7 +26,6 @@ uint16_t AM_NOTIFYPARENTMSG = AM_SIMPLEROUTINGTREEMSG;
 typedef nx_struct RoutingMsg
 {
 	nx_uint16_t  senderID;
-        nx_uint16_t  interval; //Delivery interval
 	nx_uint8_t   depth;
 
 } RoutingMsg;
