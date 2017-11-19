@@ -13,7 +13,7 @@ enum{
 	TIMER_PERIOD_MILLI=150000, // RoutingMsgTimer SerialControl
 	TIMER_FAST_PERIOD=200,     // RoutingMsgTimer  (msec) 
 
-        TIMER_EPOCH  = 60000,
+        TIMER_EPOCH  = 60000, //ektos
         Max_children = 30,
         Max_depth  = 10,      
         
