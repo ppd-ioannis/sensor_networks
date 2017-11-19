@@ -46,6 +46,8 @@ implementation
 
     uint16_t  Childern_id[Max_children];
     uint16_t  Childern_val[Max_children];
+    uint16_t  Childern_valofSquares[Max_children];
+    uint16_t  Childern_CountnNum[Max_children];
 
     // Άρα έχουμε 4 task
 	task void sendRoutingTask();
@@ -70,7 +72,7 @@ implementation
 	event void Boot.booted()
 	{
 	   uint8_t i;
-                // έχουμε πάντα το ράδιο ανοιχτώ
+         // έχουμε πάντα το ράδιο ανοιχτώ
 		call RadioControl.start();
 		
 		setRoutingSendBusy(FALSE);
@@ -95,6 +97,8 @@ implementation
          {
             Childern_id[i] = -1;
             Childern_val[i] = 0;
+            Childern_valofSquares[i] = 0;
+            Childern_CountnNum[i] = 0;
          }
        }
  
@@ -104,15 +108,13 @@ implementation
 	{
 		if (err == SUCCESS)
 		{
-			//dbg("Radio" , "Radio initialized successfully!!!\n");
-
+	
 			if (TOS_NODE_ID==0)
 			{
 				call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD);
-                                call  EndRoutingTimer.startOneShot(5000);
+                call  EndRoutingTimer.startOneShot(5000);
 			}
-                      //  λαθος γιατι βαράει για όλους τους κόμβους
-                      //  call  EndRoutingTimer.startOneShot(5000);// after 5sec Routing end
+
 		}
 		else
 		{
@@ -140,12 +142,11 @@ implementation
 
 	event void  NotifyTimer.fired()
     {
+         uint8_t i;
          uint16_t tmpVal;
 	     message_t tmp;
          error_t enqueueDone;
 	     NotifyParentMsg* mrpkt;
-
-             //dbg("SRTreeC", " NotifyTimer.fired()  id =  %d \n",TOS_NODE_ID);
 
 	     if(call NotifySendQueue.full())
 	     {
@@ -161,24 +162,41 @@ implementation
 		      return;
 	     }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-            // Υπολογίζουμε ότι θέλουμε + atomic
             tmpVal = call RandNum.rand16();
             atomic{    
                 tmpVal = TOS_NODE_ID + (tmpVal % 20);
                 
-                mrpkt -> value1 = 10; // tmpVal;
+                mrpkt->Sum   = 10; // tmpVal;
+                mrpkt->SumOfSquares = 10*10; // tmpVal*tmpVAl;
+                mrpkt->Count = 1;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-        
+               for(i=0; i < Max_children ; i++)
+               {
+                    if(Childern_id[i] != 65535)
+                    {
+                        mrpkt->Count += Childern_CountnNum[i];
+                        mrpkt->Sum += Childern_val[i];
+                        mrpkt->SumOfSquares += Childern_valofSquares[i];
+                    }
+                    else
+                    {
+                       break;
+                    }
+               }       
 		        mrpkt->senderID = TOS_NODE_ID;
+                mrpkt->parentID = parentID; // κάτω .set
             }
-           
+         
            if( TOS_NODE_ID == 0 )
            {
-                round = round +1;
+                round += 1;
                 dbg("SRTreeC", " ############################## Round %d ############################ \n",round);
                 dbg("SRTreeC", " The results are ... \n");
+                dbg("SRTreeC", " Count  =  %d\n",mrpkt->Count);
+                dbg("SRTreeC", " Sum  =  %d\n", mrpkt->Sum);
+                dbg("SRTreeC", " SumOfSquares  =  %d\n",mrpkt->SumOfSquares);
+                dbg("SRTreeC", " The AVG  =  %f\n",(double) mrpkt->Sum/mrpkt->Count);
+                dbg("SRTreeC", " The VAR  =  %f\n",(double) mrpkt->SumOfSquares/mrpkt->Count);
            }
            else
            {
@@ -206,8 +224,6 @@ implementation
 		error_t enqueueDone;
 		RoutingMsg* mrpkt;
 
-              // dbg("SRTreeC", "RoutingMsgTimer.fired RoutingMsgTimer.fired  \n");
- 
 		if(call RoutingSendQueue.full())
 		{
                      dbg("SRTreeC", "RoutingSendQueue is FULL!!! \n");
@@ -274,9 +290,6 @@ implementation
 		
 		msource = call NotifyAMPacket.source(msg);
 		
-		dbg("SRTreeC", "### NotifyReceive.receive() start ##### \n");
-		dbg("SRTreeC", "Something received!!!  from %u = %u \n",((NotifyParentMsg*) payload)->senderID, msource);
-
 		atomic{
 		memcpy(&tmp,msg,sizeof(message_t));
 		}
@@ -290,7 +303,6 @@ implementation
 		{
 			dbg("SRTreeC","NotifyMsg enqueue failed!!! \n");	
 		}
-		//dbg("SRTreeC", "### NotifyReceive.receive() end ##### \n");
 		return msg;
 	}
 
@@ -313,14 +325,12 @@ implementation
 
 		if(enqueueDone == SUCCESS)
 		{
-			dbg("SRTreeC","R.rec posting receiveRoutingTask()!!!!   Nid  = %d \n", TOS_NODE_ID);
 			post receiveRoutingTask();
 		}
 		else
 		{
 			dbg("SRTreeC","RoutingMsg enqueue failed!!! \n");	
 		}
-		//dbg("SRTreeC", "R.rec RoutingReceive.receive() end\n\n");
 		return msg;
 	}
 	
@@ -399,14 +409,11 @@ implementation
 			return;
 		}
 		
-		//dbg("SRTreeC" , " sendNotifyTask(): mlen = %u  senderID= %u \n",mlen,mpayload->senderID);
 		mdest= call NotifyAMPacket.destination(&radioNotifySendPkt);
-		
-                trySend = call NotifyAMSend.send(mdest,&radioNotifySendPkt, mlen);
+        trySend = call NotifyAMSend.send(mdest,&radioNotifySendPkt, mlen);
 		
 		if ( trySend == SUCCESS)
 		{
-			dbg("SRTreeC","sendNotifyTask(): Send returned success!!!\n");
 			setNotifySendBusy(TRUE);
 		}
 		else
@@ -456,7 +463,6 @@ implementation
 		else
 		{
 			dbg("SRTreeC","receiveRoutingTask():Empty message!!! \n");
-			//setLostRoutingRecTask(TRUE);
 			return;
 		}
 		
@@ -465,6 +471,7 @@ implementation
  
 	task void receiveNotifyTask()
 	{
+		uint8_t i;
 		uint8_t len;
 		message_t radioNotifyRecPkt;
 
@@ -487,17 +494,37 @@ implementation
 			// allios tha diagrafei to paidi apo ton pinaka paidion
 			
 
-			if ( mr->parentID == TOS_NODE_ID) // (**) Αν το μύνητα που έλαβε έχει ως πατέρα τον ίδιο τον κόμβο 
-			{                                 // Τότε βάζει τον κόμβο που το έστειλε ως παιδί του   
- 
-				// tote prosthiki stin lista ton paidion.
-				
-			}
-			else  
-			{
-			// apla diagrafei ton komvo apo paidi tou..  // ??? γιατί πότε τον είχε βάλει στην λίστα παιδιά του
-				
-			}
+               // Όντως μήνυμα έιναι για μένα
+		       if ( mr->parentID == TOS_NODE_ID) // (**) Αν το μύνητα που έλαβε έχει ως πατέρα τον ίδιο τον κόμβο 
+	           {                                 // Τότε βάζει τον κόμβο που το έστειλε ως παιδί του   
+
+               		//	dbg("SRTreeC"," 1111111111111111111111111111 id = %d\n",TOS_NODE_ID);
+                 atomic
+                 {
+                  for(i=0; i < Max_children ; i++)
+                  {
+                        if(Childern_id[i] == mr->senderID ) // Ανανεώνω τις τιμές του παιδιού στην λίστα
+                        {
+                              Childern_CountnNum[i] = mr->Count; 
+                              Childern_val[i] = mr->Sum;
+                              Childern_valofSquares[i] = mr->SumOfSquares;
+                        }  
+                        else  if(Childern_id[i] == 65535)  // προσθέτουμε το παιδί στην λίστα
+                        {
+                              Childern_id[i] = mr->senderID;
+                              Childern_CountnNum[i] = mr->Count; 
+                              Childern_val[i] = mr->Sum;
+                              Childern_valofSquares[i] = mr->SumOfSquares;
+                              break;
+                        } 
+                  }
+				 }
+	           }
+		/*	   else   // Δεν το έχουμε εμείς σαν  περίπτωση
+	           {
+			              // apla diagrafei ton komvo apo paidi tou.. 
+	           } */
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////			
 		}
 		else
