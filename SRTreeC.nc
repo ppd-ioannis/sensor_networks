@@ -18,8 +18,9 @@ module SRTreeC
 	uses interface Packet as NotifyPacket;
 
 	uses interface Timer<TMilli> as RoutingMsgTimer;  // θα τρέξει μια φορά
-        uses interface Timer<TMilli> as NodeValTimer;
+       // uses interface Timer<TMilli> as NodeValTimer; // ektos
         uses interface Timer<TMilli> as EndRoutingTimer;
+        uses interface Timer<TMilli> as NotifyTimer;
 
         uses interface Random as RandNum ;
  	
@@ -45,6 +46,8 @@ implementation
 
         uint16_t NodeVal;
         uint16_t interval;
+         
+        uint32_t StartSending;
 	
        // Άρα έχουμε 4 task
 	task void sendRoutingTask();
@@ -99,10 +102,10 @@ implementation
 			if (TOS_NODE_ID==0)
 			{
 				call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD);
+                                call  EndRoutingTimer.startOneShot(5000);
 			}
-
-                        call  EndRoutingTimer.startOneShot(5000);// after 5sec Routing end
-                        //call  NodeValTimer.startPeriodic(TIMER_NodeVal);
+                      //  λαθος γιατι βαράει για όλους τους κόμβους
+                      //  call  EndRoutingTimer.startOneShot(5000);// after 5sec Routing end
 		}
 		else
 		{
@@ -117,29 +120,26 @@ implementation
 		dbg("Radio", "Radio stopped!\n");
 	}
 
-	event void NodeValTimer.fired()
-        {
-             
-            NodeVal = TOS_NODE_ID;// + rand(20); 
-
-           /* if(TOS_NODE_ID == 0){ // check if it is prited 10 times
-              dbg("SRTreeC", "NodeValTimer Nid = %d \n",NodeValTimer.getNow());//TOS_NODE_ID);
-             }*/
-        }
-
 	event void  EndRoutingTimer.fired()
         {
-           // time slot = (TIMER_EPOCH/Max_depth) = 6000
-           //StartSend =  (TOS_NODE_ID*2) + 6000 - (curdepth*6000)/Max_depth;
+           // time slot = (TIMER_EPOCH/Max_depth) = 6000  
+           // Προσθέτουμε (TOS_NODE_ID*2) ανάλογα με το id του κόμβου για να μην στέλνουν όλα τα παιδιά μαζί
+            StartSending =  (TOS_NODE_ID*2) + 6000 - (curdepth*6000)/Max_depth;
 
-            dbg("SRTreeC", " End Routing Timer =  %d \n",call EndRoutingTimer.getNow());
-             
-           /*  if( call EndRoutingTimer.getNow() == 5000) // δουλεύει
-             {
-                  dbg("SRTreeC", " ifffffffffffff \n");     
-             }*/
+            call NotifyTimer.startPeriodicAt(StartSending,TIMER_EPOCH);
+           //dbg("SRTreeC", " End Routing Timer =  %d \n",call EndRoutingTimer.getNow());
+
+           //test 
+           //call NotifyTimer.startOneShotAt(StartSending,TIMER_EPOCH);
         }
 
+	event void  NotifyTimer.fired()
+        {
+           dbg("SRTreeC", " NotifyTimer.fired()  id =  %d \n",TOS_NODE_ID);
+
+            // Υπολογίζουμε ότι θέλουμε 
+        
+        }
 
 	event void RoutingMsgTimer.fired()
 	{
@@ -375,7 +375,8 @@ implementation
 	
 	task void receiveRoutingTask()
 	{
-		uint8_t len;
+		uint8_t  len;
+                uint32_t _time;
 		message_t radioRoutingRecPkt;
 		
 		radioRoutingRecPkt= call RoutingReceiveQueue.dequeue(); //βγάζω το μνμ (που έλαβα) από την ουρά
@@ -399,6 +400,9 @@ implementation
 				if (TOS_NODE_ID!=0)
 				{
 					call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD);
+                                        _time = 5000 - (curdepth*4800)/Max_depth;
+
+                                        call  EndRoutingTimer.startOneShot(_time);
 				}
 			}
 			else //Έχω πατέρα 
