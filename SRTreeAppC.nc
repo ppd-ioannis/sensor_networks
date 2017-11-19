@@ -13,16 +13,19 @@ implementation{
 #endif
 	components MainC, ActiveMessageC , RandomC;
 	components new TimerMilliC() as RoutingMsgTimerC;
-        components new TimerMilliC() as NodeValTimerC;
+        //components new TimerMilliC() as NodeValTimerC;
         components new TimerMilliC() as EndRoutingTimerC;
+        components new TimerMilliC() as NotifyTimerC;
 
 	components new AMSenderC(AM_ROUTINGMSG) as RoutingSenderC;
 	components new AMReceiverC(AM_ROUTINGMSG) as RoutingReceiverC;
+
 	components new AMSenderC(AM_NOTIFYPARENTMSG) as NotifySenderC;
 	components new AMReceiverC(AM_NOTIFYPARENTMSG) as NotifyReceiverC;
 
 	components new PacketQueueC(SENDER_QUEUE_SIZE) as RoutingSendQueueC;
 	components new PacketQueueC(RECEIVER_QUEUE_SIZE) as RoutingReceiveQueueC;
+
 	components new PacketQueueC(SENDER_QUEUE_SIZE) as NotifySendQueueC;
 	components new PacketQueueC(RECEIVER_QUEUE_SIZE) as NotifyReceiveQueueC;
 	
@@ -33,7 +36,8 @@ implementation{
 	
 	SRTreeC.RoutingMsgTimer->RoutingMsgTimerC;
         SRTreeC.EndRoutingTimer->EndRoutingTimerC;
-        SRTreeC.NodeValTimer -> NodeValTimerC;
+        //SRTreeC.NodeValTimer -> NodeValTimerC;
+        SRTreeC.NotifyTimer -> NotifyTimerC;
 	
 	SRTreeC.RoutingPacket->RoutingSenderC.Packet;
 	SRTreeC.RoutingAMPacket->RoutingSenderC.AMPacket;
