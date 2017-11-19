@@ -7,7 +7,7 @@ import random
 t=Tossim([])
 f=sys.stdout #open('./logfile.txt','w')
 
-#  600s πρόγραμμα + 5s Routing
+#  600s program + 5s Routing
 SIM_END_TIME=  605 * t.ticksPerSecond() #10000 * t.ticksPerSecond()
 
 #TicksPerSecond
@@ -78,7 +78,6 @@ while(h):
 #print "Node 1 connected with node 7" , r.connected(1,7) , r.connected(7,1)
 #print "Node 2 connected with node 3" , r.connected(2,3) , r.connected(3,2)
 #print "Node 4 connected with node 8" , r.connected(4,8) , r.connected(8,4)
-
 
 
 
