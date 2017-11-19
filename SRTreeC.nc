@@ -400,7 +400,7 @@ implementation
 				if (TOS_NODE_ID!=0)
 				{
 					call RoutingMsgTimer.startOneShot(TIMER_FAST_PERIOD);
-                                        _time = 5000 - (curdepth*4800)/Max_depth;
+                                        _time = 5000 - (curdepth*5000)/Max_depth;
 
                                         call  EndRoutingTimer.startOneShot(_time);
 				}
