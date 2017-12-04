@@ -19,5 +19,10 @@
 -> Πιθανες αλλαγές
 
   1] TOS_NODE_ID*2 -> ( NotifyLeader και Notify )
-  2] να στάσουμε τα 60sec σε τρία τμήματα των 20sec (Election, NotifyLeader και Notify) 
+  2] να σπάσουμε τα 60sec σε τρία τμήματα των 20sec (Election, NotifyLeader και Notify) 
+  
+  
+  
+  
+  
    
